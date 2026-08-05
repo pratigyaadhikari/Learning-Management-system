@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    'rest_framework',
 
     'accounts',
     'courses',
@@ -127,3 +129,5 @@ STATIC_URL = 'static/'
 
 
 AUTH_USER_MODEL = "accounts.User"
+
+
