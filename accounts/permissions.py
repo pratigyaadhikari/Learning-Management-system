@@ -21,7 +21,7 @@ class IsInstructor(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and request.user.role == "INSTRUCTOR"
+            and request.user.role in ["INSTRUCTOR", "ADMIN"]
         )
 
 
@@ -33,7 +33,7 @@ class IsStudent(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and request.user.role == "STUDENT"
+            and request.user.role in ["STUDENT", "ADMIN"]
         )
 
 
@@ -45,5 +45,5 @@ class IsSponsor(BasePermission):
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
-            and request.user.role == "SPONSOR"
+            and request.user.role in ["SPONSOR", "ADMIN"]
         )

@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny#, IsAuthenticated
 
 # from drf_spectacular.utils import extend_schema
-
+from .permissions import IsAdmin, IsStudent, IsInstructor, IsSponsor
 from .models import *
 from .serializers import *
 # Create your views here.
@@ -17,33 +17,32 @@ from .serializers import *
 class UserModelViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    
-    # Only authenticated Admin users can perform CRUD on Users.
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+
+    permission_classes = [IsAdmin]   # Only Admin users can access this API.
     
 class StudentProfileModelViewSet(viewsets.ModelViewSet):
     queryset = StudentProfile.objects.all()         #Which data should Django fetch?
     serializer_class = StudentProfileSerializer     #Which serializer should convert the data to/from JSON?
+    
+    permission_classes = [IsStudent]    #Only Students can access this API
 
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
-
+    
 
 class InstructorProfileModelViewSet(viewsets.ModelViewSet):
     queryset = InstructorProfile.objects.all()
     serializer_class = InstructorProfileSerializer
     
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsInstructor]
+    
+    
 
 
 class SponsorProfileModelViewSet(viewsets.ModelViewSet):
     queryset = SponsorProfile.objects.all()
     serializer_class = SponsorProfileSerializer
     
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsSponsor]
+    
     
 
 
