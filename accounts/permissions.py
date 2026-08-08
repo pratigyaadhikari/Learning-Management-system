@@ -76,3 +76,57 @@ class IsAdminOrInstructorReadOnly(BasePermission):
             return request.method in ["GET", "HEAD", "OPTIONS"]
 
         return False
+    
+class IsSubmissionOwnerOrInstructorOrAdmin(BasePermission):
+    """
+    Admin:
+        - Full access
+
+    Instructor:
+        - Can view and update submissions
+          belonging to their own courses
+
+    Student:
+        - Can view and create their own submissions
+        - Cannot update or delete submissions
+
+    Sponsor:
+        - No access
+    """
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        # Admin → full access
+        if request.user.role == "ADMIN":
+            return True
+
+        # Student → can only GET or POST
+        if request.user.role == "STUDENT":
+            return request.method in ["GET", "POST", "HEAD", "OPTIONS"]
+
+        # Instructor → can view/update
+        if request.user.role == "INSTRUCTOR":
+            return request.method in [
+                "GET", "PUT", "PATCH", "HEAD", "OPTIONS"
+            ]
+
+        return False
+
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+
+        # Admin → can access everything
+        if user.role == "ADMIN":
+            return True
+
+        # Student → only their own submission
+        if user.role == "STUDENT":
+            return obj.student.user == user
+
+        # Instructor → only submissions from their own courses
+        if user.role == "INSTRUCTOR":
+            return obj.assessment.course.instructor.user == user
+
+        return False

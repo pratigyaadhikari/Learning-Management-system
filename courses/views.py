@@ -1,6 +1,6 @@
 from django.shortcuts import render
 # from rest_framework.authentication import TokenAuthentication
-from accounts.permissions import IsAdminOrInstructorReadOnly
+from accounts.permissions import IsAdminOrInstructorReadOnly, IsSubmissionOwnerOrInstructorOrAdmin
 
 from rest_framework import viewsets
 from rest_framework import filters
@@ -163,7 +163,9 @@ class AssessmentModelViewSet(viewsets.ModelViewSet):
     
 class SubmissionModelViewSet(viewsets.ModelViewSet):
     queryset = Submission.objects.all()
-    serializer_class = SubmissionSerializer    
+    serializer_class = SubmissionSerializer  
+    
+    permission_classes = [IsSubmissionOwnerOrInstructorOrAdmin]  
     
     # Filtering, searching, and ordering
     filter_backends = [

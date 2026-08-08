@@ -67,3 +67,13 @@ class SubmissionSerializer(serializers.ModelSerializer):
     assessment_title = serializers.CharField(source="assessment.title",read_only=True)
     course_title = serializers.CharField(source="assessment.course.title",read_only=True)
     instructor_name = serializers.CharField(source="assessment.course.instructor.user.username",read_only=True)
+    
+    def validate(self, attrs):
+        user = self.context["request"].user
+
+        # Students cannot set or change score/feedback.
+        if user.role == "STUDENT":
+            attrs.pop("score", None)    #pop(key, default_value)d
+            attrs.pop("feedback", None)
+
+        return attrs    #attribute
