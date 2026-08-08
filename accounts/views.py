@@ -26,6 +26,11 @@ class StudentProfileModelViewSet(viewsets.ModelViewSet):
     
     permission_classes = [IsStudent]    #Only Students can access this API
 
+    def get_queryset(self):
+        if self.request.user.role == "ADMIN":   #Admin can view all student profiles.
+            return StudentProfile.objects.all()
+        else:
+            return StudentProfile.objects.filter(user=self.request.user)    #Students can view only their own profile
     
 
 class InstructorProfileModelViewSet(viewsets.ModelViewSet):
@@ -33,6 +38,12 @@ class InstructorProfileModelViewSet(viewsets.ModelViewSet):
     serializer_class = InstructorProfileSerializer
     
     permission_classes = [IsInstructor]
+    
+    def get_queryset(self):
+        if self.request.user.role == "ADMIN":
+            return InstructorProfile.objects.all()
+        else:
+            return InstructorProfile.objects.filter(user=self.request.role)
     
     
 
@@ -43,6 +54,12 @@ class SponsorProfileModelViewSet(viewsets.ModelViewSet):
     
     permission_classes = [IsSponsor]
     
+    def get_queryset(self):
+        if self.request.user.role == "ADMIN":
+            return SponsorProfile.objects.all()
+        else:
+            return SponsorProfile.objects.filter(user=self.request.user)
+            
     
 
 

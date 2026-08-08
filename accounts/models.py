@@ -16,14 +16,14 @@ class User(AbstractUser):
     
     
 class StudentProfile(models.Model):
-    user =models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
+    user =models.OneToOneField(User, on_delete=models.CASCADE, related_name='studentprofile')
     interests = models.TextField(blank=True)
     
     def __str__(self):
         return f"{self.user.username}'s Student Profile"
     
 class InstructorProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructor_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='instructorprofile')
     bio = models.TextField(blank=True)
     title = models.CharField(max_length=100)
     
@@ -31,7 +31,7 @@ class InstructorProfile(models.Model):
         return f"Instructor Profile: {self.user.username}"
     
 class SponsorProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="sponsor_profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="sponsorprofile")
     company_name = models.CharField(max_length=100)
     company_website = models.URLField(blank=True)
     
