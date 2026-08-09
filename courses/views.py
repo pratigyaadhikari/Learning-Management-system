@@ -1,6 +1,6 @@
 from django.shortcuts import render
 # from rest_framework.authentication import TokenAuthentication
-from accounts.permissions import IsAdminOrInstructorReadOnly, IsSubmissionOwnerOrInstructorOrAdmin
+from accounts.permissions import IsAdminOrInstructorReadOnly,IsAdminOrStudentForEnrollment, IsAdminOrInstructorForAssessment, IsSubmissionOwnerOrInstructorOrAdmin
 
 from rest_framework import viewsets
 from rest_framework import filters
@@ -58,6 +58,8 @@ class CourseModelViewset(viewsets.ModelViewSet):
 class EnrollmentModelViewSet(viewsets.ModelViewSet):
     queryset = Enrollment.objects.all()
     serializer_class = EnrollmentSerializer
+    
+    permission_classes = [IsAdminOrStudentForEnrollment]
     
     # Enable filtering, searching, and ordering.
     filter_backends = [
@@ -126,6 +128,8 @@ class EnrollmentModelViewSet(viewsets.ModelViewSet):
 class AssessmentModelViewSet(viewsets.ModelViewSet):
     queryset = Assessment.objects.all()
     serializer_class = AssessmentSerializer
+    
+    permission_classes = [IsAdminOrInstructorForAssessment]
     
     filter_backends = [
         filters.SearchFilter,

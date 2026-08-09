@@ -43,7 +43,7 @@ class InstructorProfileModelViewSet(viewsets.ModelViewSet):
         if self.request.user.role == "ADMIN":
             return InstructorProfile.objects.all()
         else:
-            return InstructorProfile.objects.filter(user=self.request.role)
+            return InstructorProfile.objects.filter(user=self.request.user)
     
     
 
