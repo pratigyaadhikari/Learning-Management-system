@@ -43,4 +43,4 @@ class PaymentSerializer(serializers.ModelSerializer):
             "payment_status",
             "paid_at",
         ]
-        read_only_fields = ["sponsor_name", "course_title"]
+        read_only_fields = ["sponsor_name", "course_title","paid_at",]

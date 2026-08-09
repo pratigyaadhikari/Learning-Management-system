@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from accounts.permissions import  IsAdminOrSponsorForSponsorship, IsAdminForPayment
 
 from rest_framework.exceptions import PermissionDenied
+from django.utils import timezone
 
 from .models import *
 from .serializers import *
@@ -134,3 +135,15 @@ class PaymentModelViewSet(viewsets.ModelViewSet):
                 )
 
             serializer.save()
+            
+    def perform_update(self, serializer):
+        payment = serializer.save()
+
+        # If payment is marked as PAID,
+        # automatically record the payment time.
+        if payment.payment_status == Payment.PaymentStatus.PAID:
+            payment.paid_at = timezone.now()
+        else:
+            payment.paid_at = None
+            
+        payment.save(update_fields=["paid_at"])
