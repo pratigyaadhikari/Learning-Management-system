@@ -25,6 +25,13 @@ class EnrollmentSerializer(serializers.ModelSerializer):
             "progress_percent",
             "enrolled_at",
             "completed_at",]
+        
+        read_only_fields = [
+            "student",
+            "progress_percent",
+            "enrolled_at",
+            "completed_at",
+        ]
 
 class AssessmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,6 +41,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
             "course",
             "course_title",
             "instructor_name",
+            "student_name",
             "title",
             "description",
             "due_date",
@@ -43,6 +51,15 @@ class AssessmentSerializer(serializers.ModelSerializer):
         
     course_title = serializers.CharField(source="course.title",read_only=True)
     instructor_name = serializers.CharField(source="course.instructor.user.username",read_only=True)
+    student_name = serializers.SerializerMethodField()
+
+    def get_student_name(self, obj):
+        request = self.context.get("request")
+
+        if request and request.user.role == "STUDENT":
+            return request.user.username
+
+        return None
         
 class SubmissionSerializer(serializers.ModelSerializer):
     

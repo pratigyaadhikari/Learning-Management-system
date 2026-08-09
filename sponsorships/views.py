@@ -3,6 +3,8 @@ from rest_framework import viewsets,filters
 from django_filters.rest_framework import DjangoFilterBackend
 from accounts.permissions import  IsAdminOrSponsorForSponsorship, IsAdminForPayment
 
+from rest_framework.exceptions import PermissionDenied
+
 from .models import *
 from .serializers import *
 
@@ -114,3 +116,21 @@ class PaymentModelViewSet(viewsets.ModelViewSet):
 
         # Students cannot access payments
         return Payment.objects.none()
+    
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        # Admin can create payment for any sponsorship
+        if user.role == "ADMIN":
+            serializer.save()
+
+        # Sponsor can pay only for their own sponsorship
+        elif user.role == "SPONSOR":
+            sponsorship = serializer.validated_data["sponsorship"]
+
+            if sponsorship.sponsor.user != user:
+                raise PermissionDenied(
+                    "You can only make payments for your own sponsorships."
+                )
+
+            serializer.save()

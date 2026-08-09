@@ -2,6 +2,8 @@ from django.shortcuts import render
 # from rest_framework.authentication import TokenAuthentication
 from accounts.permissions import IsAdminOrInstructorReadOnly,IsAdminOrStudentForEnrollment, IsAdminOrInstructorForAssessment, IsSubmissionOwnerOrInstructorOrAdmin
 
+from rest_framework.exceptions import PermissionDenied
+
 from rest_framework import viewsets
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -164,6 +166,24 @@ class AssessmentModelViewSet(viewsets.ModelViewSet):
             return Assessment.objects.filter(course__instructor__user=user)
         else:      
             return Assessment.objects.none()
+        
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        # Admin can create assessment for any course
+        if user.role == "ADMIN":
+            serializer.save()
+
+        # Instructor can create assessment only for their own course
+        elif user.role == "INSTRUCTOR":
+            course = serializer.validated_data["course"]
+
+            if course.instructor.user != user:
+                raise PermissionDenied(
+                    "You can only create assessments for your own courses."
+                )
+
+            serializer.save()
     
 class SubmissionModelViewSet(viewsets.ModelViewSet):
     queryset = Submission.objects.all()

@@ -217,8 +217,12 @@ class IsAdminForPayment(BasePermission):
 
         if user.role == "ADMIN":
             return True
+        
+        # Sponsor → can view and make payment
+        if user.role == "SPONSOR":
+            return request.method in ["GET", "POST", "HEAD", "OPTIONS"]
 
-        if user.role in ["SPONSOR", "INSTRUCTOR"]:
+         # Instructor → view only
+        if user.role == "INSTRUCTOR":
             return request.method in ["GET", "HEAD", "OPTIONS"]
-
         return False
