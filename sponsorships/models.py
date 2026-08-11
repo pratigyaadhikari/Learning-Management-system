@@ -1,5 +1,5 @@
 from django.db import models
-from accounts.models import SponsorProfile
+from accounts.models import SponsorProfile, StudentProfile
 from courses.models import Course
 
 # Create your models here.
@@ -14,6 +14,7 @@ class Sponsorship(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
 
     sponsor = models.ForeignKey(SponsorProfile,on_delete=models.CASCADE,related_name="sponsorships")
+    student = models.ForeignKey(StudentProfile,on_delete=models.CASCADE,related_name="sponsorships",null=True,blank=True,)
     course = models.ForeignKey(Course,on_delete=models.CASCADE,related_name="sponsorships")
     amount = models.DecimalField(max_digits=10,decimal_places=2)
     status = models.CharField(max_length=20,choices=Status.choices,default=Status.PENDING)

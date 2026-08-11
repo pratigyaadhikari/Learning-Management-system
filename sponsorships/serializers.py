@@ -4,16 +4,19 @@ from .models import *
 class SponsorshipSerializer(serializers.ModelSerializer):
     sponsor_name = serializers.CharField(source="sponsor.company_name",read_only=True)
 
+    student_name = serializers.CharField(source="student.user.username",read_only=True)
+  
     course_title = serializers.CharField(source="course.title",read_only=True)
 
     instructor_name = serializers.CharField(source="course.instructor.user.username", read_only=True)
-    
     class Meta:
         model = Sponsorship
         fields = [
             "id",
             "sponsor",
             "sponsor_name",
+            "student",
+            "student_name",
             "course",
             "course_title",
             "instructor_name",

@@ -1,9 +1,9 @@
 from django.shortcuts import render
+from django.utils import timezone
 # from rest_framework.authentication import TokenAuthentication
 from accounts.permissions import IsAdminOrInstructorReadOnly,IsAdminOrStudentForEnrollment, IsAdminOrInstructorForAssessment, IsSubmissionOwnerOrInstructorOrAdmin
 
 from rest_framework.exceptions import PermissionDenied
-
 from rest_framework import viewsets
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -233,13 +233,53 @@ class SubmissionModelViewSet(viewsets.ModelViewSet):
 
         return Submission.objects.none()     # Sponsor and other roles get no submissions.
 
+    def update_enrollment_progress(self, student, course):
+        enrollment = Enrollment.objects.filter(
+            student=student,
+            course=course
+        ).first()
+
+        if not enrollment:
+            return
+
+        total_assessments = Assessment.objects.filter(
+            course=course
+        ).count()
+
+        completed_assessments = Submission.objects.filter(
+            student=student,
+            assessment__course=course
+        ).count()
+
+        if total_assessments == 0:
+            progress = 0
+        else:
+            progress = int(
+                (completed_assessments / total_assessments) * 100
+            )
+
+        enrollment.progress_percent = progress
+
+        if progress == 100:
+            enrollment.status = Enrollment.Status.COMPLETED
+            enrollment.completed_at = timezone.now()
+
+        enrollment.save()    
+
+
     def perform_create(self, serializer):
         user = self.request.user
 
         # Student is automatically linked to themselves.
         if user.role == "STUDENT":
-            serializer.save(student=user.studentprofile)
+            submission = serializer.save(student=user.studentprofile)
 
+        # Update enrollment progress
+            self.update_enrollment_progress(student=user.studentprofile,course=submission.assessment.course)
+        
         # Admin can choose the student manually.
         elif user.role == "ADMIN":
-            serializer.save()
+            submission = serializer.save()
+            
+            # Update enrollment progress
+            self.update_enrollment_progress(student=submission.student,course=submission.assessment.course)
