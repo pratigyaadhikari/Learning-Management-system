@@ -283,3 +283,22 @@ class SubmissionModelViewSet(viewsets.ModelViewSet):
             
             # Update enrollment progress
             self.update_enrollment_progress(student=submission.student,course=submission.assessment.course)
+            
+    def perform_update(self, serializer):
+        submission = serializer.save()
+
+        # Send result email after instructor grades the submission
+        if submission.score is not None:
+            from .emails import send_assessment_result_email
+
+            student = submission.student.user
+            assessment = submission.assessment
+
+            send_assessment_result_email(
+                student_email=student.email,
+                student_name=student.username,
+                assessment_title=assessment.title,
+                course_title=assessment.course.title,
+                score=submission.score,
+                feedback=submission.feedback,
+            )        
