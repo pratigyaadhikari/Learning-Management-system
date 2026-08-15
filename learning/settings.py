@@ -42,11 +42,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
+    'drf_spectacular',
 
     'accounts',
     'courses',
     'sponsorships',
     'analytics',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -147,6 +149,8 @@ REST_FRAMEWORK = {
     # Default pagination
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 5,
+    
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 

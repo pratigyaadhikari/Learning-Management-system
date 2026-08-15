@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.utils import timezone
 # from rest_framework.authentication import TokenAuthentication
 from accounts.permissions import IsAdminOrInstructorReadOnly,IsAdminOrStudentForEnrollment, IsAdminOrInstructorForAssessment, IsSubmissionOwnerOrInstructorOrAdmin
+from notifications.utils import notify_new_assessment, notify_assessment_result, notify_instructor_new_submission
 
 from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets
@@ -172,7 +173,7 @@ class AssessmentModelViewSet(viewsets.ModelViewSet):
 
         # Admin can create assessment for any course
         if user.role == "ADMIN":
-            serializer.save()
+            assessment = serializer.save()
 
         # Instructor can create assessment only for their own course
         elif user.role == "INSTRUCTOR":
@@ -180,10 +181,19 @@ class AssessmentModelViewSet(viewsets.ModelViewSet):
 
             if course.instructor.user != user:
                 raise PermissionDenied(
-                    "You can only create assessments for your own courses."
-                )
+                    "You can only create assessments for your own courses.")
 
-            serializer.save()
+            assessment = serializer.save()
+
+        else:
+            raise PermissionDenied(
+                "You do not have permission to create an assessment.")
+
+        # Get students enrolled in this course
+        enrollments = assessment.course.enrollments.filter(status="ACTIVE").select_related("student__user")
+
+        # Create notification for each enrolled student
+        notify_new_assessment(assessment,[enrollment.student for enrollment in enrollments])
     
 class SubmissionModelViewSet(viewsets.ModelViewSet):
     queryset = Submission.objects.all()
@@ -274,26 +284,46 @@ class SubmissionModelViewSet(viewsets.ModelViewSet):
         if user.role == "STUDENT":
             submission = serializer.save(student=user.studentprofile)
 
-        # Update enrollment progress
-            self.update_enrollment_progress(student=user.studentprofile,course=submission.assessment.course)
-        
+            # Update enrollment progress
+            self.update_enrollment_progress(
+                student=user.studentprofile,
+                course=submission.assessment.course
+            )
+
+            # Notify the instructor
+            notify_instructor_new_submission(submission)
+
         # Admin can choose the student manually.
         elif user.role == "ADMIN":
             submission = serializer.save()
-            
+
             # Update enrollment progress
-            self.update_enrollment_progress(student=submission.student,course=submission.assessment.course)
+            self.update_enrollment_progress(
+                student=submission.student,
+                course=submission.assessment.course
+            )
+
+            # Notify the instructor
+            notify_instructor_new_submission(submission)
+            
             
     def perform_update(self, serializer):
+        # Check the old score before saving
+        old_score = serializer.instance.score
+
+        # Save the updated submission
         submission = serializer.save()
 
-        # Send result email after instructor grades the submission
-        if submission.score is not None:
+        # Only send result notification/email when it was previously ungraded
+        # and is now graded.
+        if old_score is None and submission.score is not None:
+
             from .emails import send_assessment_result_email
 
             student = submission.student.user
             assessment = submission.assessment
 
+            # Send result email
             send_assessment_result_email(
                 student_email=student.email,
                 student_name=student.username,
@@ -301,4 +331,7 @@ class SubmissionModelViewSet(viewsets.ModelViewSet):
                 course_title=assessment.course.title,
                 score=submission.score,
                 feedback=submission.feedback,
-            )        
+            )
+
+            # Send in-app notification
+            notify_assessment_result(submission)

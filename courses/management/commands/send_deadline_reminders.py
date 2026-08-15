@@ -2,9 +2,10 @@ from datetime import timedelta
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-
 from courses.models import Assessment
 from courses.emails import send_assessment_deadline_reminders
+
+from notifications.utils import notify_assessment_due
 
 
 class Command(BaseCommand):
@@ -24,6 +25,16 @@ class Command(BaseCommand):
 
         for assessment in assessments:
             send_assessment_deadline_reminders(assessment)
+
+            students = assessment.course.enrollments.filter(
+                status="ACTIVE"
+            ).select_related("student__user")
+
+            notify_assessment_due(
+                assessment,
+                [enrollment.student for enrollment in students]
+            )
+
             count += 1
 
         self.stdout.write(

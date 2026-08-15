@@ -90,7 +90,31 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
         # Students cannot set or change score/feedback.
         if user.role == "STUDENT":
-            attrs.pop("score", None)    #pop(key, default_value)d
+            attrs.pop("score", None)
             attrs.pop("feedback", None)
 
-        return attrs    #attribute
+            student = user.studentprofile
+            assessment = attrs.get("assessment")
+
+            # Check if student is enrolled in the assessment's course
+            is_enrolled = Enrollment.objects.filter(
+                student=student,
+                course=assessment.course,
+                status="ACTIVE"
+            ).exists()
+
+            if not is_enrolled:
+                raise serializers.ValidationError(
+                    "You are not enrolled in this course."
+                )
+
+            # Prevent duplicate submission
+            if Submission.objects.filter(
+                student=student,
+                assessment=assessment
+            ).exists():
+                raise serializers.ValidationError(
+                    "You have already submitted this assessment."
+                )
+
+        return attrs

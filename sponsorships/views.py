@@ -123,7 +123,7 @@ class PaymentModelViewSet(viewsets.ModelViewSet):
 
         # Admin can create payment for any sponsorship
         if user.role == "ADMIN":
-            serializer.save()
+            payment = serializer.save()
 
         # Sponsor can pay only for their own sponsorship
         elif user.role == "SPONSOR":
@@ -134,7 +134,12 @@ class PaymentModelViewSet(viewsets.ModelViewSet):
                     "You can only make payments for your own sponsorships."
                 )
 
-            serializer.save()
+            payment = serializer.save()
+
+        # Automatically record payment time if payment is PAID
+        if payment.payment_status == Payment.PaymentStatus.PAID:
+            payment.paid_at = timezone.now()
+            payment.save(update_fields=["paid_at"])
             
     def perform_update(self, serializer):
         payment = serializer.save()
