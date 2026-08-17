@@ -157,3 +157,9 @@ REST_FRAMEWORK = {
 # Email configuration for development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "lms@example.com"
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Learning Management System API",
+    "DESCRIPTION": "REST API for managing courses, enrollments, assessments, submissions, sponsorships, payments, and notifications.",
+    "VERSION": "1.0.0",
+}
